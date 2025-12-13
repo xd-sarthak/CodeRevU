@@ -47,24 +47,11 @@ export async function fetchUserContribution(token: string, username: string) {
   }
 `;
 
-interface ContributionData {
-    user: {
-      contributionsCollection: {
-        contributionCalendar: {
-          totalContributions: number;
-          weeks: {
-            contributionCount:number,
-            data: string | Date,
-            color: string
-          };
-        };
-      };
-    };
-  }
+
   
 
 try {
-    const response:ContributionData = await octokit.graphql(query,{
+    const response:any = await octokit.graphql(query,{
         username
     });
 
