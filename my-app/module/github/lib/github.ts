@@ -62,3 +62,17 @@ try {
 }
 
 }
+
+export const getRepositories = async (page:number=1,perPage:number=10) => {
+    const token = await getGithubToken();
+    const octokit = new Octokit({auth:token});
+
+    const {data} = await octokit.rest.repos.listForAuthenticatedUser({
+      sort:"updated",
+      direction:"desc",
+      visibility:"all"
+    });
+
+    return data;
+
+}
