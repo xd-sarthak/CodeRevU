@@ -81,7 +81,7 @@ export const createWebHook = async (owner:string,repo:string) => {
   const token  = await getGithubToken();
   const octokit = new Octokit({auth:token});
 
-  const webhookURL = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/webhook/github`
+  const webhookURL = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/webhooks/github`
 
   const {data:hooks} = await octokit.rest.repos.listWebhooks({
     owner,
@@ -101,7 +101,7 @@ export const createWebHook = async (owner:string,repo:string) => {
       url:webhookURL,
       content_type:"json"
     },
-    events:["pull-request"]
+    events:["pull_request"]
   });
 
   return data;
