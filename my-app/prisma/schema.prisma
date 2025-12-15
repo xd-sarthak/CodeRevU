@@ -1,3 +1,6 @@
+// Prisma schema for CodeRevU application
+// Defines database models for user authentication, sessions, accounts, verifications, and GitHub repositories
+// Uses PostgreSQL as the database provider
 
 generator client {
   provider = "prisma-client"

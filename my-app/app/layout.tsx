@@ -1,3 +1,7 @@
+// Root layout component for the CodeRevU Next.js application
+// Provides global setup including fonts, theme provider, React Query provider, and toast notifications
+// Wraps all pages with necessary context providers
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

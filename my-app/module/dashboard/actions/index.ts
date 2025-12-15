@@ -1,3 +1,8 @@
+// Server actions for dashboard functionality
+// Handles fetching and aggregating user statistics from GitHub API and database
+// Includes contribution stats, overall dashboard stats, and monthly activity breakdown
+// Requires authenticated session and GitHub token access
+
 "use server";
 import {
     fetchUserContribution, getGithubToken

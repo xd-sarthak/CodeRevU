@@ -1,3 +1,8 @@
+// Authentication utility functions for server-side auth checks
+// requireAuth: Ensures user is authenticated, redirects to login if not
+// requireUnAuth: Ensures user is not authenticated, redirects to home if logged in
+// Used in page components and API routes to protect resources
+
 "use server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"

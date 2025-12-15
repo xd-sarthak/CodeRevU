@@ -1,3 +1,8 @@
+// Contribution graph component for dashboard
+// Displays GitHub-style activity calendar showing daily coding contributions over the last year
+// Uses react-activity-calendar library with theme-aware colors
+// Fetches data via React Query and handles loading/empty states
+
 "use client"
 import React from 'react'
 import { useTheme } from 'next-themes'

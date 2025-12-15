@@ -1,3 +1,8 @@
+// Dashboard page component for CodeRevU
+// Displays overview of user's coding activity including repositories, commits, PRs, and AI reviews
+// Uses React Query for data fetching and Recharts for visualization
+// Includes contribution graph and monthly activity bar chart
+
 "use client"
 import React, { use } from 'react'
 import { Card,CardContent,CardDescription,CardHeader,CardTitle } from '@/components/ui/card'

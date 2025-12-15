@@ -1,3 +1,8 @@
+// Prisma database client configuration
+// Uses PostgreSQL adapter for connection pooling and performance
+// Implements singleton pattern to reuse client instance in development
+// Exports the Prisma client for database operations throughout the app
+
 import { PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
