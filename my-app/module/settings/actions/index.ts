@@ -95,6 +95,7 @@ export async function getConnectedRepositories(){
                 fullName:true,
                 url:true,
                 createdAt:true
+                
             },
             orderBy:{
                 createdAt:"desc"
