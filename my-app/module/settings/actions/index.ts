@@ -4,6 +4,7 @@ import {headers} from "next/headers";
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { success } from "zod";
+import { deleteWebHook } from "@/module/github/lib/github";
 
 // Action to fetch user profile
 export async function getUserProfile(){
@@ -108,3 +109,79 @@ export async function getConnectedRepositories(){
     }
 }
 
+export async function disconnectRepository(repositoryId:string){
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if(!session?.user){
+            throw new Error("Unauthorized")
+        }
+
+        const repository = await prisma.repository.findUnique({
+            where:{
+                id:repositoryId,
+                userId:session.user.id
+            }
+        });
+
+        if(!repository){
+            throw new Error("Repository not found")
+        }
+
+        await deleteWebHook(repository.owner,repository.name);
+
+        await prisma.repository.delete({
+            where:{
+                id:repositoryId,
+                userId:session.user.id
+            }
+        });
+
+        revalidatePath("/dashboard/settiings","page");
+        revalidatePath("/dashboard/repository","page");
+
+        return {success:true}
+    } catch (error) {
+        console.error("Error disconnecting repository: ",error);
+        return {success:false, error:"Failed to disconnect repository"}     
+    }
+}
+
+export async function disconnectAllRepository(){
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if(!session?.user){
+            throw new Error("Unauthorized")
+        }
+
+        const repository = await prisma.repository.findMany({
+            where:{
+                userId:session.user.id
+            }
+        });
+
+
+        await Promise.all(repository.map(async (repo) => {
+            await deleteWebHook(repo.owner,repo.name);
+        }))
+
+        const result = await prisma.repository.deleteMany({
+            where:{
+                userId:session.user.id
+            }
+        });
+
+        revalidatePath("/dashboard/settiings","page");
+        revalidatePath("/dashboard/repository","page");
+
+        return {success:true, count:result.count}
+    } catch (error) {
+        console.error("Error disconnecting all repositories: ",error);
+        return {success:false, error:"Failed to disconnect repositories"}     
+    }
+}
