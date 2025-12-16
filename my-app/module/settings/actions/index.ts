@@ -73,3 +73,38 @@ export async function updateUserProfile(data:{name?:string; email?:string}){
         throw new Error("Failed to update user profile");
     }
 }
+
+export async function getConnectedRepositories(){
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if(!session?.user){
+            throw new Error("Unauthorized");
+        }
+
+        const repositories = await prisma.repository.findMany({
+            where:{
+                userId:session.user.id
+            },
+            select:{
+                id:true,
+                name:true,
+                fullName:true,
+                url:true,
+                createdAt:true
+            },
+            orderBy:{
+                createdAt:"desc"
+            }
+        });
+
+        return repositories;
+
+    } catch (error) {
+        console.error("error fetching connected repositories: ",error);
+        return [];        
+    }
+}
+
