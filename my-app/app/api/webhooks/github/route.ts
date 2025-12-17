@@ -11,6 +11,10 @@ export async function POST(req:NextRequest){
             return NextResponse.json({message:"Pong"},{status:200});
         }
 
+        if(event === "pull_request"){
+            
+        }
+
         //handle later
 
         return NextResponse.json({
