@@ -1,5 +1,5 @@
-"use server"
-
+ "use server"
+import { inngest } from "@/inngest/client"
 import prisma from "@/lib/db"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -58,7 +58,20 @@ export const connectRepository = async (owner:string,repo:string,githubId:number
 
    //inc repo count
 
-   //trigger repo indexing for rag
+   //trigger repo indexing for rag(fire and forget)
+   try {
+      await inngest.send({
+         name:"repository.connected",
+         data:{
+            owner,
+            repo,
+            userId:session.user.id
+         }
+      })
+   } catch (error) {
+      console.error("Failed to trigger repository indexing: ",error);
+      
+   }
 
    return webhook;
 }

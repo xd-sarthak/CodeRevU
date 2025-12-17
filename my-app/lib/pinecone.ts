@@ -5,4 +5,4 @@ export const pinecone = new Pinecone({
     
 }); 
 
-export const pineconeIndex = pinecone.Index("coderevu-vectorembeddings-v1");
+export const pineconeIndex = pinecone.Index("coderevu-indexing-v1");
