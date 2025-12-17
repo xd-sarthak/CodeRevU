@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { success } from "zod"; // ❌ unused import
 import { deleteWebHook } from "@/module/github/lib/github";
 
 /**
