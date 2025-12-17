@@ -2,9 +2,12 @@ import { Octokit } from "octokit";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { headers } from "next/headers";
-import { oc } from "date-fns/locale";
 
+//fetches github access token for the logged in user
+//Request -> session -> user -> linked Github account -> access token
 export const getGithubToken = async () => {
+
+  //gets current session
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -27,8 +30,14 @@ export const getGithubToken = async () => {
   return account.accessToken;
 };
 
+
+//fetches user contribution calendar data
+//we use github graphql API because REST API does not provide contribution data
+//contribution data is public but rate limited without auth so we use graphQL and auth token
 export async function fetchUserContribution(token: string, username: string) {
   const octokit = new Octokit({ auth: token });
+
+  //graphQL query to get contribution calendar
   const query = `
   query ($username: String!) {
     user(login: $username) {
@@ -64,6 +73,7 @@ try {
 
 }
 
+//fetche authenticated user's repositories
 export const getRepositories = async (page:number=1,perPage:number=10) => {
     const token = await getGithubToken();
     const octokit = new Octokit({auth:token});
@@ -78,6 +88,10 @@ export const getRepositories = async (page:number=1,perPage:number=10) => {
 
 }
 
+
+//webhooks allows github -> server communication
+//instead of polling github, we can setup webhooks to get notified on events
+//we listen for pull_request events to index code on new PRs
 export const createWebHook = async (owner:string,repo:string) => {
   const token  = await getGithubToken();
   const octokit = new Octokit({auth:token});
@@ -91,10 +105,12 @@ export const createWebHook = async (owner:string,repo:string) => {
 
   const exisitingHook = hooks.find(hook=>hook.config.url === webhookURL);
 
+  //Idempotency - return existing hook if already present
   if(exisitingHook){
     return exisitingHook
   }
-
+  
+  //create new webhook if doesnt exist
   const {data} = await octokit.rest.repos.createWebhook({
     owner,
     repo,
@@ -108,6 +124,8 @@ export const createWebHook = async (owner:string,repo:string) => {
   return data;
 }
 
+//deletes webhook from the repo
+//identify webhooks by ID 
 export const deleteWebHook = async (owner:string,repo:string) => {
   const token = await getGithubToken();
   const octokit = new Octokit({auth:token});
@@ -138,6 +156,30 @@ export const deleteWebHook = async (owner:string,repo:string) => {
   }
 }
 
+//recursively fetches all files in a repo along with their content
+
+/**
+ * Recursively fetches ALL code files from a GitHub repository.
+ *
+ * First principles:
+ * - GitHub stores repos as a tree (files + directories)
+ * - getContent returns:
+ *   - a single file OR
+ *   - a directory listing
+ * - Files are Base64 encoded
+ *
+ * This function:
+ * - walks the entire repo tree
+ * - decodes file contents
+ * - filters out binary/non-code files
+ *
+ * Used for:
+ * - RAG indexing
+ * - static analysis
+ * - documentation generation
+ */
+
+
 export async function getRepoFileContents(
   token:string,
   owner:string,
@@ -151,6 +193,8 @@ const {data} = await octokit.rest.repos.getContent({
   repo,
   path});
 
+  //if API returned a single file
+
   if(!Array.isArray(data)){
     if(data.type === "file"&& data.content){
       return [{
@@ -160,7 +204,8 @@ const {data} = await octokit.rest.repos.getContent({
     }
     return [];
   }
-
+  
+  //If API returned a directory
   let files: {path:string,content:string}[] = [];
   
 for(const item of data){
@@ -183,6 +228,7 @@ for(const item of data){
       }
     }
 
+    //recursive call for directories
     else if(item.type === "dir"){
       const subFiles = await getRepoFileContents(token, owner, repo, item.path);
       files = files.concat(subFiles);
