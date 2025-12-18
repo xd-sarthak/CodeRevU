@@ -160,6 +160,8 @@ The project is aimed at individual developers and teams who want automated, cons
 
 ## 4. System Architecture
 
+![System Architecture](my-app/public/system-architecture.png)
+
 ### High-level
 
 - **Web App (Next.js)**
@@ -193,49 +195,7 @@ The project is aimed at individual developers and teams who want automated, cons
   - GitHub sends POST to `/api/webhooks/github`.
   - The handler decides whether to enqueue a review via server action → Inngest.
 
-### ASCII Architecture Diagram
-
-```text
-+-----------+        OAuth         +-----------+
-|  Browser  | <------------------> |  GitHub   |
-+-----+-----+                      +-----+-----+
-      |                                   ^
-      | HTTP (Next.js pages, actions)     |
-      v                                   |
-+-----+-----------------------------------+--------+
-|               Next.js App (App Router)          |
-|                                                 |
-|  - Auth routes (/api/auth) via Better Auth      |
-|  - Webhooks (/api/webhooks/github)             |
-|  - Inngest handler (/api/inngest)              |
-|  - Server Actions (repos, reviews, settings)   |
-+-----+----------------------+-------------------+
-      |                      |
-      | Prisma               | Inngest events
-      v                      v
-+-----+--------+      +------+-------------------+
-|  PostgreSQL  |      |         Inngest          |
-| (Prisma ORM) |      |  - repository.connected  |
-+-----+--------+      |  - pr.review.requested   |
-      ^               +------+-------------------+
-      |                      |
-      | Reviews, repos       | GitHub & AI calls
-      |                      v
-      |          +-----------+---------+
-      |          |   GitHub API        |
-      |          |  (REST & GraphQL)   |
-      |          +-----------+---------+
-      |                      |
-      |              Code + PR diff
-      |                      v
-      |          +-----------+---------+
-      |          |  AI + RAG Layer    |
-      |          |  (Gemini + Pinecone|
-      |          +--------------------+
-```
-
----
-
+```mermaid
 graph TD
     %% Styles
     classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
@@ -247,7 +207,7 @@ graph TD
     %% Client
     Browser[Browser / User]:::client
 
-    %% Sync API Layer
+    %% Synchronous API Layer
     subgraph "Synchronous API Layer (Next.js App Router)"
         UI[React Server Components]:::api
         Actions[Server Actions]:::api
@@ -256,23 +216,23 @@ graph TD
         InngestAPI[Inngest Ingest Endpoint<br/>/api/inngest]:::api
     end
 
-    %% Async Execution
+    %% Async Execution Layer
     subgraph "Async Event & Execution Layer"
         Inngest[Inngest Cloud<br/>Event Bus + Scheduler]:::async
         Workers[Stateless Worker Functions<br/>(Serverless Execution)]:::async
     end
 
-    %% Data
+    %% Data Layer
     subgraph "Persistence & Intelligence"
         DB[(PostgreSQL<br/>Prisma ORM)]:::data
         Vector[(Pinecone<br/>Vector Store)]:::data
     end
 
-    %% External
+    %% External Services
     GitHub[GitHub API & Webhooks]:::ext
-    Gemini[Gemini LLM]:::ext
+    Gemini[Google Gemini LLM]:::ext
 
-    %% Flows
+    %% Core Flows
     Browser --> UI
     UI --> Actions
     Browser --> Auth
@@ -293,6 +253,8 @@ graph TD
     Workers --> GitHub
 
     Auth <-- OAuth --> GitHub
+```
+
 
 
 ## 5. Core Workflows
