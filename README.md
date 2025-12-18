@@ -236,6 +236,65 @@ The project is aimed at individual developers and teams who want automated, cons
 
 ---
 
+graph TD
+    %% Styles
+    classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef api fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef async fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+    classDef data fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
+    classDef ext fill:#eceff1,stroke:#37474f,stroke-width:2px,stroke-dasharray:5 5;
+
+    %% Client
+    Browser[Browser / User]:::client
+
+    %% Sync API Layer
+    subgraph "Synchronous API Layer (Next.js App Router)"
+        UI[React Server Components]:::api
+        Actions[Server Actions]:::api
+        Auth[Auth Routes<br/>/api/auth]:::api
+        Webhooks[GitHub Webhooks<br/>/api/webhooks]:::api
+        InngestAPI[Inngest Ingest Endpoint<br/>/api/inngest]:::api
+    end
+
+    %% Async Execution
+    subgraph "Async Event & Execution Layer"
+        Inngest[Inngest Cloud<br/>Event Bus + Scheduler]:::async
+        Workers[Stateless Worker Functions<br/>(Serverless Execution)]:::async
+    end
+
+    %% Data
+    subgraph "Persistence & Intelligence"
+        DB[(PostgreSQL<br/>Prisma ORM)]:::data
+        Vector[(Pinecone<br/>Vector Store)]:::data
+    end
+
+    %% External
+    GitHub[GitHub API & Webhooks]:::ext
+    Gemini[Gemini LLM]:::ext
+
+    %% Flows
+    Browser --> UI
+    UI --> Actions
+    Browser --> Auth
+
+    Actions --> DB
+    Auth --> DB
+
+    Webhooks --> Inngest
+    Actions --> Inngest
+
+    Inngest --> InngestAPI
+    InngestAPI --> Workers
+
+    Workers --> GitHub
+    Workers --> Gemini
+    Workers --> Vector
+    Workers --> DB
+    Workers --> GitHub
+
+    Auth <-- OAuth --> GitHub
+
+
 ## 5. Core Workflows
 
 ### 5.1 User authentication & GitHub account linking
