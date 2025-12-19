@@ -126,7 +126,7 @@ model UserUsage{
   userId String @unique
   user User @relation(fields:[userId],references:[id],onDelete:Cascade)
   repositoryCount Int @default(0)
-  reiewCounts Json @default("{}")
+  reviewCounts Json @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

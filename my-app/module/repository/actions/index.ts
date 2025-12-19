@@ -8,6 +8,7 @@ import {
   createWebHook,
   getRepositories,
 } from "@/module/github/lib/github";
+import { canCreateReview,incrementRepositoryCount,decrementRepositoryCount, canConnectRepository } from "@/module/payment/lib/subscription";
 
 /**
  * Fetches all GitHub repositories for the authenticated user
@@ -73,7 +74,11 @@ export const connectRepository = async (
 
   // TODO:
   // Rate limiting should be enforced here:
+  const canConnect = await canConnectRepository(session.user.id);
 
+  if(!canConnect){
+    throw new Error("You have reached the maximum number of connected repositories. Please upgrade your subscription to connect more repositories.");
+  }
 
   // Create webhook so GitHub can notify us about PRs/events
   const webhook = await createWebHook(owner, repo);
@@ -95,6 +100,7 @@ export const connectRepository = async (
 
   // TODO:
   // Increment user's connected repo count
+  await incrementRepositoryCount(session.user.id);
 
   /**
    * Trigger repository indexing asynchronously.

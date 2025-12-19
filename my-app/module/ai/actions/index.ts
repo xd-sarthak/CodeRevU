@@ -2,6 +2,8 @@
 import { inngest } from "@/inngest/client";
 import prisma from "@/lib/db"
 import { getPullRequestDiff } from "@/module/github/lib/github";
+import { canCreateReview,incrementReviewCount } from "@/module/payment/lib/subscription";
+
 export async function reviewPullRequest(
     owner:string,
     repo:string,
@@ -31,6 +33,12 @@ export async function reviewPullRequest(
         throw new Error(`Repository ${owner}/${repo} not found`);
     }
 
+    //tier limits
+    const canReview = await canCreateReview(repository.user.id, repository.id);
+    if(!canReview){
+        throw new Error("You have reached your review limit for this repository. Please upgrade to pro");
+    }
+
     //fetch github account
     const githubAccount = repository.user.accounts[0];
 
@@ -53,6 +61,8 @@ export async function reviewPullRequest(
             userId:repository.user.id
         }
     });
+
+    await incrementReviewCount(repository.user.id,repository.id);
 
     return {success:true,
         message:"Review Queued"
@@ -82,3 +92,4 @@ export async function reviewPullRequest(
         }
     }
 }
+
