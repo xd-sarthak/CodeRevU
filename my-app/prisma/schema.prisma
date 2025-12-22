@@ -30,8 +30,8 @@ model User {
   usage         UserUsage?
   subscriptionTier String @default("FREE")
   subscriptionStatus String? //active cancelled expired
-
-
+  polarCustomerId String? @unique
+  polarSubscriptionId String? @unique
   @@unique([email])
   @@map("user")
 }

@@ -197,7 +197,7 @@ export async function updatePolarCustomerId(
     await prisma.user.update({
         where:{id:userId},
         data:{
-            //polarCustomerId
+            polarCustomerId
         }
     })
 }
