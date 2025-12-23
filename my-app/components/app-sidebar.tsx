@@ -53,7 +53,7 @@ export const AppSidebar = () => {
         },
         {
             title: "Subscription",
-            url: "/dashboard/subcription",
+            url: "/dashboard/subscriptions",
             icon: BookOpen,
         },
         {

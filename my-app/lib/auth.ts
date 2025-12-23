@@ -20,6 +20,7 @@ export const auth = betterAuth({
           scope:["repo"]
         }, 
       },
+      trustedOrigins:["http://localhost:3000","https://lowerable-permissibly-georgie.ngrok-free.dev"],
      plugins: [
         polar({
             client: PolarClient,
@@ -32,7 +33,7 @@ export const auth = betterAuth({
                             slug: "coderevu" // Custom slug for easy reference in Checkout URL, e.g. /checkout/codeRevU
                         }
                     ],
-                    successUrl: process.env.POLAR_SUCCESS_URL,
+                    successUrl: process.env.POLAR_SUCCESS_URL || "/dashboard/subscriptions?success=true",
                     authenticatedUsersOnly: true
                 }),
                 portal({
