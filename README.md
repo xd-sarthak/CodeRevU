@@ -41,17 +41,17 @@ graph TD
         end
     end
 
-    User -->|Open PR| GitHub
-    GitHub -->|Webhook (pull_request)| WebApp
+    User -->|"Open PR"| GitHub
+    GitHub -->|"Webhook (pull_request)"| WebApp
     
-    WebApp -->|Trigger Event| Reviewer
-    Reviewer -->|Fetch Context| VectorDB
-    Reviewer -->|Generate Review| Gemini
-    Reviewer -->|Post Comment| GitHub
+    WebApp -->|"Trigger Event"| Reviewer
+    Reviewer -->|"Fetch Context"| VectorDB
+    Reviewer -->|"Generate Review"| Gemini
+    Reviewer -->|"Post Comment"| GitHub
     
-    User -->|Connect Repo| WebApp
-    WebApp -->|Trigger Event| Indexer
-    Indexer -->|Crawl & Embed| VectorDB
+    User -->|"Connect Repo"| WebApp
+    WebApp -->|"Trigger Event"| Indexer
+    Indexer -->|"Crawl & Embed"| VectorDB
 ```
 
 ---
