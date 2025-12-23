@@ -41,3 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+my-app/public/VSCodeUserSetup-x64-1.107.1.exe
