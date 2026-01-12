@@ -1,0 +1,38 @@
+# mprocs configuration for CodeRevU development environment
+# This runs all necessary services for local development:
+# - Next.js dev server (bun run dev)
+# - Inngest dev server (for background jobs)
+# - ngrok tunnel (for webhook testing)
+
+procs:
+  # Next.js Development Server
+  next:
+    shell: "bun run dev"
+    cwd: "."
+    autostart: true
+    autorestart: true
+    stop: "SIGINT"
+
+  # Inngest Development Server
+  inngest:
+    shell: "npx inngest-cli@latest dev"
+    cwd: "."
+    autostart: true
+    autorestart: true
+    stop: "SIGINT"
+
+  # ngrok tunnel for webhooks
+  # This exposes your local server to the internet so GitHub can send webhooks
+  ngrok:
+    shell: "ngrok http 3000 --domain=lowerable-permissibly-georgie.ngrok-free.dev"
+    cwd: "."
+    autostart: true
+    autorestart: false
+    stop: "SIGINT"
+
+# Keyboard shortcuts
+# - Ctrl+A: Show all processes
+# - Ctrl+C: Stop selected process
+# - Ctrl+Q: Quit mprocs
+# - Arrow keys: Navigate between processes
+# - Enter: Focus on selected process output

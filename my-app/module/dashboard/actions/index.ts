@@ -9,12 +9,15 @@ import {
 } from "@/module/github/lib/github"
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { connection } from "next/server";
 import { Octokit } from "octokit";
 import prisma from "@/lib/db";
 
 
 export async function getContributionStats() {
     try {
+        await connection();
+
         const session = await auth.api.getSession({
             headers: await headers(),
         });
@@ -59,6 +62,8 @@ export async function getContributionStats() {
 
 export async function getDashboardStats() {
     try {
+        await connection();
+
         const session = await auth.api.getSession({
             headers: await headers(),
         })
@@ -80,6 +85,8 @@ export async function getDashboardStats() {
                 userId: session.user.id
             }
         });
+
+        console.log('📊 Dashboard Stats - Connected repos:', totalRepos);
 
         const calendar = await fetchUserContribution(token, user.login);
         const totalCommits = calendar?.totalContributions || 0
@@ -121,6 +128,8 @@ export async function getDashboardStats() {
 
 export async function getMonthlyActivity() {
     try {
+        await connection();
+
         const session = await auth.api.getSession({
             headers: await headers(),
         })

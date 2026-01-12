@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:all": "mprocs",
+    "dev:bash": "bash dev.sh",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

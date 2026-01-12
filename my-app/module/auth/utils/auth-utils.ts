@@ -7,13 +7,15 @@
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { connection } from "next/server"
 
 export const requireAuth = async () => {
+    await connection()
     const session = await auth.api.getSession({
         headers: await headers()
     })
 
-    if(!session){
+    if (!session) {
         redirect("/login")
     }
 
@@ -21,11 +23,12 @@ export const requireAuth = async () => {
 }
 
 export const requireUnAuth = async () => {
+    await connection()
     const session = await auth.api.getSession({
         headers: await headers()
     })
 
-    if(session){
+    if (session) {
         redirect("/")
     }
 
