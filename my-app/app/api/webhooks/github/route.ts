@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
 
         // Handle ping event (GitHub sends this to test webhook)
         if (event === "ping") {
+            console.log(`🏓 Ping event received from GitHub`);
             return NextResponse.json({ message: "Pong" }, { status: 200 });
         }
 
@@ -62,21 +63,35 @@ export async function POST(req: NextRequest) {
             const repo = body.repository.full_name;
             const prNumber = body.number;
 
+            console.log(`📋 Pull Request Event Details:`, {
+                action,
+                repo,
+                prNumber,
+                prTitle: body.pull_request?.title || 'N/A'
+            });
+
             const [owner, repoName] = repo.split("/");
 
             // Trigger review for opened or updated PRs
             if (action === "opened" || action === "synchronize") {
-                console.log(`🔄 Triggering review for ${repo} #${prNumber}`);
+                console.log(`🔄 Triggering review for ${repo} #${prNumber} (action: ${action})`);
 
                 // Fire and forget - don't block webhook response
                 reviewPullRequest(owner, repoName, prNumber)
-                    .then(() => console.log(`✅ Review completed for ${repo} #${prNumber}`))
+                    .then((result) => {
+                        console.log(`✅ Review queued successfully for ${repo} #${prNumber}`, result);
+                    })
                     .catch((error) => {
-                        console.error(`❌ Review failed for ${repo} #${prNumber}:`, error.message);
+                        console.error(`❌ Review failed for ${repo} #${prNumber}:`, {
+                            message: error.message,
+                            stack: error.stack
+                        });
                     });
             } else {
-                console.log(`ℹ️  Ignoring PR action: ${action} for ${repo} #${prNumber}`);
+                console.log(`ℹ️  Ignoring PR action: ${action} for ${repo} #${prNumber} (only 'opened' and 'synchronize' trigger reviews)`);
             }
+        } else {
+            console.log(`ℹ️  Ignoring non-PR event: ${event} (only 'pull_request' events trigger reviews)`);
         }
 
         // Return success response
