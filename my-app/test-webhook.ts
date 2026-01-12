@@ -24,8 +24,7 @@ if (!WEBHOOK_SECRET) {
     process.exit(1);
 }
 
-console.log('🔑 Using webhook secret from .env file');
-console.log('Secret (first 10 chars):', WEBHOOK_SECRET.substring(0, 10) + '...\n');
+console.log('🔑 Webhook secret loaded from .env file\n');
 
 // Sample GitHub webhook payload (ping event)
 const payload = {

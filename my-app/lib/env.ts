@@ -46,6 +46,14 @@ const envSchema = z.object({
 });
 
 /**
+ * Validated environment variables (lazy evaluation)
+ * 
+ * Uses safeParse to avoid throwing at import time.
+ * Call validateEnv() early in your application to ensure all variables are valid.
+ */
+const envResult = envSchema.safeParse(process.env);
+
+/**
  * Validated and typed environment variables
  * 
  * Use this instead of process.env to get type safety and validation
@@ -54,7 +62,7 @@ const envSchema = z.object({
  * import { env } from '@/lib/env';
  * const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY;
  */
-export const env = envSchema.parse(process.env);
+export const env = envResult.success ? envResult.data : ({} as Env);
 
 /**
  * Type-safe environment variables
@@ -64,20 +72,21 @@ export type Env = z.infer<typeof envSchema>;
 /**
  * Validates environment variables and provides helpful error messages
  * Call this early in your application startup
+ * 
+ * @throws {Error} If environment variables are invalid
  */
 export function validateEnv(): void {
-    try {
-        envSchema.parse(process.env);
-        console.log('✅ Environment variables validated successfully');
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            console.error('❌ Environment variable validation failed:');
-            error.issues.forEach((err: z.ZodIssue) => {
-                console.error(`  - ${err.path.join('.')}: ${err.message}`);
-            });
-            console.error('\nPlease check your .env file and ensure all required variables are set.');
-            process.exit(1);
-        }
-        throw error;
+    const result = envSchema.safeParse(process.env);
+
+    if (!result.success) {
+        console.error('❌ Environment variable validation failed:');
+        result.error.issues.forEach((err: z.ZodIssue) => {
+            console.error(`  - ${err.path.join('.')}: ${err.message}`);
+        });
+        console.error('\nPlease check your .env file and ensure all required variables are set.');
+        process.exit(1);
     }
+
+    console.log('✅ Environment variables validated successfully');
 }
+

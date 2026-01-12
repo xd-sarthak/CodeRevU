@@ -4,13 +4,14 @@ import { retrieveContext } from "@/module/ai/lib/rag";
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 import prisma from "@/lib/db";
+import { incrementReviewCount } from "@/module/payment/lib/subscription";
 
 export const generateReview = inngest.createFunction(
   { id: "generate-review", concurrency: 5 },
   { event: "pr.review.requested" },
 
   async ({ event, step }) => {
-    const { owner, repo, prNumber, userId } = event.data;
+    const { owner, repo, prNumber, userId, repositoryId } = event.data;
 
     const { diff, title, description, token } = await step.run("fetch-pr-data", async () => {
 
@@ -70,21 +71,21 @@ Format your response in markdown.`;
       return text
     });
 
-    await step.run("post-comment" , async ()=>{
-      await postReviewComment(token , owner , repo , prNumber , review)
+    await step.run("post-comment", async () => {
+      await postReviewComment(token, owner, repo, prNumber, review)
     })
 
 
-    await step.run("save-review" , async()=>{
+    await step.run("save-review", async () => {
       const repository = await prisma.repository.findFirst({
-        where:{
+        where: {
           owner,
-          name:repo
+          name: repo
         }
       });
 
-      if(repository){
-                await prisma.review.create({
+      if (repository) {
+        await prisma.review.create({
           data: {
             repositoryId: repository.id,
             prNumber,
@@ -96,6 +97,13 @@ Format your response in markdown.`;
         });
       }
     })
-return {success:true}
+
+    // Increment review count ONLY after successful completion
+    await step.run("increment-review-count", async () => {
+      await incrementReviewCount(userId, repositoryId);
+      console.log(`✅ Review count incremented for user ${userId}`);
+    });
+
+    return { success: true }
   }
 )

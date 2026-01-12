@@ -83,13 +83,11 @@ export async function reviewPullRequest(
                 owner,
                 repo,
                 prNumber,
-                userId: repository.user.id
+                userId: repository.user.id,
+                repositoryId: repository.id  // Pass repositoryId for credit tracking
             }
         });
         console.log(`✅ Inngest event sent successfully`);
-
-        await incrementReviewCount(repository.user.id, repository.id);
-        console.log(`✅ Review count incremented`);
 
         return {
             success: true,
