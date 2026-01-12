@@ -3,7 +3,7 @@
 // Configures GitHub OAuth provider with repository access scope
 // Handles user authentication, sessions, and social login
 import { betterAuth } from "better-auth";
-import {prismaAdapter} from "better-auth/adapters/prisma";
+import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./db";
 import { polar, checkout, portal, usage, webhooks } from "@polar-sh/better-auth";
 import { PolarClient } from "@/module/payment/config/polar";
@@ -13,15 +13,17 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql", // or "mysql", "postgresql", ...etc
     }),
-    socialProviders: { 
-        github: { 
-          clientId: process.env.GITHUB_CLIENT_ID as string, 
-          clientSecret: process.env.GITHUB_CLIENT_SECRET as string, 
-          scope:["repo"]
-        }, 
-      },
-      trustedOrigins:["http://localhost:3000","https://lowerable-permissibly-georgie.ngrok-free.dev"],
-     plugins: [
+    socialProviders: {
+        github: {
+            clientId: process.env.GITHUB_CLIENT_ID as string,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+            scope: ["repo"]
+        },
+    },
+    trustedOrigins: process.env.APP_BASE_URL
+        ? [process.env.APP_BASE_URL]
+        : ["http://localhost:3000"],
+    plugins: [
         polar({
             client: PolarClient,
             createCustomerOnSignUp: true,
@@ -37,21 +39,23 @@ export const auth = betterAuth({
                     authenticatedUsersOnly: true
                 }),
                 portal({
-                  returnUrl: process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000/dashboard",
+                    returnUrl: process.env.APP_BASE_URL
+                        ? `${process.env.APP_BASE_URL}/dashboard`
+                        : "http://localhost:3000/dashboard",
                 }),
                 usage(),
                 webhooks({
-                    secret:process.env.POLAR_WEBHOOK_SECRET!,
-                    onSubscriptionActive:async (payload) => {
+                    secret: process.env.POLAR_WEBHOOK_SECRET!,
+                    onSubscriptionActive: async (payload) => {
                         const customerId = payload.data.customerId;
                         const user = await prisma.user.findUnique({
-                            where:{
+                            where: {
                                 polarCustomerId: customerId
                             }
                         });
 
-                        if(user){
-                            await updateUserTier(user.id,"PRO","ACTIVE",payload.data.id)
+                        if (user) {
+                            await updateUserTier(user.id, "PRO", "ACTIVE", payload.data.id)
                         }
                         //
                     },
@@ -59,38 +63,38 @@ export const auth = betterAuth({
                         const customerId = payload.data.customerId;
 
                         const user = await prisma.user.findUnique({
-                            where:{
+                            where: {
                                 polarCustomerId: customerId
                             }
                         });
 
-                        if(user){
-                            await updateUserTier(user.id,user.subscriptionTier as any,"CANCELED")
+                        if (user) {
+                            await updateUserTier(user.id, user.subscriptionTier as any, "CANCELED")
                         }
                     },
                     onSubscriptionRevoked: async (payload) => {
                         const customerId = payload.data.customerId;
 
                         const user = await prisma.user.findUnique({
-                            where:{
+                            where: {
                                 polarCustomerId: customerId
                             }
                         });
 
-                        if(user){
-                            await updateUserTier(user.id,"FREE","EXPIRED")
+                        if (user) {
+                            await updateUserTier(user.id, "FREE", "EXPIRED")
                         }
                     },
-                    onOrderPaid: async () => {},
+                    onOrderPaid: async () => { },
                     onCustomerCreated: async (payload) => {
                         const user = await prisma.user.findUnique({
-                            where:{
-                                email:payload.data.email
+                            where: {
+                                email: payload.data.email
                             }
                         });
 
-                        if(user){
-                            await updatePolarCustomerId(user.id,payload.data.id)
+                        if (user) {
+                            await updatePolarCustomerId(user.id, payload.data.id)
                         }
                     }
 
