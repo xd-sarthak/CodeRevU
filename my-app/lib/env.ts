@@ -46,34 +46,70 @@ const envSchema = z.object({
 });
 
 /**
- * Validated environment variables (lazy evaluation)
- * 
- * Uses safeParse to avoid throwing at import time.
- * Call validateEnv() early in your application to ensure all variables are valid.
- */
-const envResult = envSchema.safeParse(process.env);
-
-/**
- * Validated and typed environment variables
- * 
- * Use this instead of process.env to get type safety and validation
- * 
- * @example
- * import { env } from '@/lib/env';
- * const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY;
- */
-export const env = envResult.success ? envResult.data : ({} as Env);
-
-/**
  * Type-safe environment variables
  */
 export type Env = z.infer<typeof envSchema>;
 
 /**
- * Validates environment variables and provides helpful error messages
- * Call this early in your application startup
+ * Module-scoped validated environment variables
+ * Only set after validateEnv() is called successfully
+ */
+let _env: Env | null = null;
+
+/**
+ * Get validated environment variables
  * 
- * @throws {Error} If environment variables are invalid
+ * @throws {Error} If validateEnv() hasn't been called yet
+ * @returns Validated environment variables
+ * 
+ * @example
+ * import { getEnv } from '@/lib/env';
+ * const apiKey = getEnv().GOOGLE_GENERATIVE_AI_API_KEY;
+ */
+export function getEnv(): Env {
+    if (!_env) {
+        throw new Error(
+            'Environment variables not validated. Call validateEnv() first. ' +
+            'This should be done in instrumentation.ts or at application startup.'
+        );
+    }
+    return _env;
+}
+
+/**
+ * @deprecated Use getEnv() instead for safer access to environment variables
+ * 
+ * Backward-compatible export that returns validated env or empty object.
+ * This exists for compatibility but should be migrated to getEnv().
+ * 
+ * @example
+ * // OLD (unsafe):
+ * import { env } from '@/lib/env';
+ * const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY;
+ * 
+ * // NEW (safe):
+ * import { getEnv } from '@/lib/env';
+ * const apiKey = getEnv().GOOGLE_GENERATIVE_AI_API_KEY;
+ */
+export const env: Env = new Proxy({} as Env, {
+    get(target, prop) {
+        if (_env) {
+            return _env[prop as keyof Env];
+        }
+        // If accessed before validation, throw helpful error
+        throw new Error(
+            `Attempted to access env.${String(prop)} before validateEnv() was called. ` +
+            'Environment variables must be validated first (done in instrumentation.ts). ' +
+            'Consider using getEnv() instead for explicit validation checks.'
+        );
+    }
+});
+
+/**
+ * Validates environment variables and provides helpful error messages
+ * Call this early in your application startup (e.g., in instrumentation.ts)
+ * 
+ * @throws {Error} If environment variables are invalid (via process.exit)
  */
 export function validateEnv(): void {
     const result = envSchema.safeParse(process.env);
@@ -87,6 +123,7 @@ export function validateEnv(): void {
         process.exit(1);
     }
 
+    // Store validated environment variables
+    _env = result.data;
     console.log('✅ Environment variables validated successfully');
 }
-

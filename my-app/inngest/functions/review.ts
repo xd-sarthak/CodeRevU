@@ -99,9 +99,18 @@ Format your response in markdown.`;
     })
 
     // Increment review count ONLY after successful completion
+    // Non-blocking: failures here won't cause retries or duplicate comments
     await step.run("increment-review-count", async () => {
-      await incrementReviewCount(userId, repositoryId);
-      console.log(`✅ Review count incremented for user ${userId}`);
+      try {
+        await incrementReviewCount(userId, repositoryId);
+        console.log(`✅ Review count incremented for user ${userId}`);
+      } catch (error) {
+        // Log error but don't throw - credit tracking failure shouldn't
+        // cause the entire review to retry and create duplicate GitHub comments
+        console.error(`⚠️ Failed to increment review count for user ${userId}:`, error);
+        console.error(`Review was successful but credit tracking failed. Manual adjustment may be needed.`);
+        // Don't rethrow - allow the function to complete successfully
+      }
     });
 
     return { success: true }
