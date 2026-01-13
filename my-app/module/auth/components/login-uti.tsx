@@ -23,25 +23,30 @@ const LoginUI = () => {
             <div className='flex-1 flex flex-col justify-center px-12 py-16 lg:px-20'>
                 <div className='max-w-2xl'>
                     {/* Logo */}
-                    <div className='mb-16'>
-                        <div className='inline-flex items-center gap-3 text-2xl font-bold'>
-                            <div className='w-10 h-10 bg-primary rounded-lg flex items-center justify-center'>
-                                <span className='text-xl'>🐰</span>
-                            </div>
-                            <span>CodeRevU</span>
-                        </div>
-                    </div>
+                    {/* Logo */}
+<div className="...">
+    <div className="flex items-center gap-3">
+        <div className="relative group">
+            {/* Glow effect */}
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
+            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <span className="text-white font-bold text-lg drop-shadow-sm">⌘</span>
+            </div>
+        </div>
+        <span className="font-serif text-xl text-white drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]">CodeRevU</span>
+    </div>
+</div>
+
 
                     {/* Main Content */}
-                    <h1 className='text-5xl lg:text-6xl font-bold mb-6 leading-tight'>
-                        Cut Code Review<br />
-                        Time & Bugs in <span className='text-primary'>Half.</span><br />
-                        <span className='text-primary'>Instantly.</span>
-                    </h1>
+                     <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-foreground leading-[1.1] tracking-tight mb-6 animate-fade-up delay-100">
+              Ship faster.
+              <br />
+              <span className="text-accent italic">Think clearer.</span>
+            </h1>
 
                     <p className='text-gray-400 text-lg font-mono'>
-                        Supercharge your team to ship faster with the most<br />
-                        advanced AI code reviews.
+                        Your AI-powered code review companion. Catch bugs before they catch you.
                     </p>
                 </div>
             </div>
