@@ -303,6 +303,9 @@ You need to run Prisma migrations on your production database.
 
 ### Build Fails
 
+**Error**: `Module not found: Can't resolve './generated/prisma/client'`
+- **Solution**: Ensure `"postinstall": "prisma generate"` is in your `package.json` scripts. This generates the Prisma client during the build process.
+
 **Error**: `Cannot find module 'prisma'`
 - **Solution**: Ensure `prisma` is in `devDependencies` in `package.json`
 
