@@ -109,18 +109,23 @@ export const env: Env = new Proxy({} as Env, {
  * Validates environment variables and provides helpful error messages
  * Call this early in your application startup (e.g., in instrumentation.ts)
  * 
- * @throws {Error} If environment variables are invalid (via process.exit)
+ * @throws {Error} If environment variables are invalid
  */
 export function validateEnv(): void {
     const result = envSchema.safeParse(process.env);
 
     if (!result.success) {
-        console.error('❌ Environment variable validation failed:');
+        const errorMessages = ['❌ Environment variable validation failed:'];
         result.error.issues.forEach((err: z.ZodIssue) => {
-            console.error(`  - ${err.path.join('.')}: ${err.message}`);
+            errorMessages.push(`  - ${err.path.join('.')}: ${err.message}`);
         });
-        console.error('\nPlease check your .env file and ensure all required variables are set.');
-        process.exit(1);
+        errorMessages.push('\nPlease check your .env file and ensure all required variables are set.');
+
+        const errorMessage = errorMessages.join('\n');
+        console.error(errorMessage);
+
+        // Throw error instead of process.exit() for Edge Runtime compatibility
+        throw new Error(errorMessage);
     }
 
     // Store validated environment variables
