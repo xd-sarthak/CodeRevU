@@ -20,7 +20,7 @@ const envSchema = z.object({
 
     // Vector Database - Pinecone
     PINECONE_API_KEY: z.string().min(1, 'PINECONE_API_KEY is required'),
-    PINECONE_INDEX_NAME: z.string().min(1, 'PINECONE_INDEX_NAME is required'),
+    PINECONE_INDEX_NAME: z.string().optional(),
 
     // Application URLs (server-side only, NOT NEXT_PUBLIC_)
     APP_BASE_URL: z.string().url('APP_BASE_URL must be a valid URL'),
