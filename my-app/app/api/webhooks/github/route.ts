@@ -13,6 +13,23 @@ import { verifyGitHubWebhook, validateWebhookEvent } from "@/lib/webhook-securit
  * - Error handling without information leakage
  */
 export async function POST(req: NextRequest) {
+    // DEBUG: Log request details to diagnose 308 redirect issues
+    console.log('🔔 GitHub Webhook Request Received:', {
+        url: req.url,
+        method: req.method,
+        nextUrl: req.nextUrl.toString(),
+        pathname: req.nextUrl.pathname,
+        headers: {
+            'content-type': req.headers.get('content-type'),
+            'x-github-event': req.headers.get('x-github-event'),
+            'x-github-delivery': req.headers.get('x-github-delivery'),
+            'x-hub-signature-256': req.headers.get('x-hub-signature-256') ? 'present' : 'missing',
+            'user-agent': req.headers.get('user-agent'),
+            'host': req.headers.get('host'),
+        },
+        timestamp: new Date().toISOString(),
+    });
+
     try {
         // SECURITY: Get raw body for signature verification
         const rawBody = await req.text();
