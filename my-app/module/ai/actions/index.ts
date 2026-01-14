@@ -77,17 +77,30 @@ export async function reviewPullRequest(
         console.log(`✅ PR diff fetched:`, { title });
 
         console.log(`📤 Sending Inngest event: pr.review.requested`);
-        await inngest.send({
-            name: "pr.review.requested",
-            data: {
-                owner,
-                repo,
-                prNumber,
-                userId: repository.user.id,
-                repositoryId: repository.id  // Pass repositoryId for credit tracking
-            }
+        console.log(`🔧 Inngest env check in action:`, {
+            INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY ? 'set (' + process.env.INNGEST_SIGNING_KEY.substring(0, 8) + '...)' : 'MISSING',
+            INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY ? 'set (' + process.env.INNGEST_EVENT_KEY.substring(0, 8) + '...)' : 'MISSING',
         });
-        console.log(`✅ Inngest event sent successfully`);
+
+        try {
+            const sendResult = await inngest.send({
+                name: "pr.review.requested",
+                data: {
+                    owner,
+                    repo,
+                    prNumber,
+                    userId: repository.user.id,
+                    repositoryId: repository.id  // Pass repositoryId for credit tracking
+                }
+            });
+            console.log(`✅ Inngest event sent successfully:`, sendResult);
+        } catch (inngestError) {
+            console.error(`❌ Inngest send failed:`, {
+                error: inngestError instanceof Error ? inngestError.message : inngestError,
+                stack: inngestError instanceof Error ? inngestError.stack : undefined
+            });
+            throw inngestError;
+        }
 
         return {
             success: true,

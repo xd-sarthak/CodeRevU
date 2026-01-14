@@ -91,6 +91,11 @@ export async function POST(req: NextRequest) {
 
             // Trigger review for opened or updated PRs
             if (action === "opened" || action === "synchronize") {
+                // DEBUG: Check Inngest configuration
+                console.log(`🔧 Inngest Config Check:`, {
+                    INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY ? 'set' : 'MISSING',
+                    INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY ? 'set' : 'MISSING',
+                });
                 console.log(`🔄 Triggering review for ${repo} #${prNumber} (action: ${action})`);
 
                 // Fire and forget - don't block webhook response
