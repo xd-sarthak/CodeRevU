@@ -13,6 +13,7 @@ export async function reviewPullRequest(
 
     try {
         //fetch the repo from database
+        console.log(`🔍 Looking up repository in database: ${owner}/${repo}`);
         const repository = await prisma.repository.findFirst({
             where: {
                 owner,
@@ -30,6 +31,7 @@ export async function reviewPullRequest(
                 }
             }
         });
+        console.log(`🔍 Database query completed. Found:`, repository ? 'yes' : 'no');
 
         if (!repository) {
             console.error(`❌ Repository not found in database:`, { owner, repo });
