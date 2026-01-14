@@ -26,18 +26,9 @@ export const auth = betterAuth({
     plugins: [
         polar({
             client: PolarClient,
-            createCustomerOnSignUp: true,
-            // Debug logging for Polar customer creation
-            getCustomerCreateParams: async ({ user }) => {
-                console.log("[Polar Debug] Creating customer with user data:", {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    hasEmail: !!user.email,
-                    hasName: !!user.name
-                });
-                return {};
-            },
+            // Disabled due to @polar-sh/sdk v0.42 incompatibility with @polar-sh/better-auth v1.6.2
+            // Customer creation is handled via the onCustomerCreated webhook instead
+            createCustomerOnSignUp: false,
             use: [
                 checkout({
                     products: [
