@@ -77,75 +77,88 @@ export const connectRepository = async (
   repo: string,
   githubId: number
 ) => {
-  // Opt into dynamic rendering
-  await connection();
+  console.log(`🚀 [connectRepository] Starting connection for ${owner}/${repo}`, { githubId });
 
-  // Authenticate user
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    throw new Error("Unauthorised");
-  }
-
-  // TODO:
-  // Rate limiting should be enforced here:
-  const canConnect = await canConnectRepository(session.user.id);
-
-  if (!canConnect) {
-    throw new Error("You have reached the maximum number of connected repositories. Please upgrade your subscription to connect more repositories.");
-  }
-
-  // Create webhook so GitHub can notify us about PRs/events
-  const webhook = await createWebHook(owner, repo);
-
-  // Only persist repo if webhook creation succeeded
-  if (webhook) {
-    await prisma.repository.create({
-      data: {
-        // GitHub IDs must be stored as BigInt to preserve precision
-        githubId: BigInt(githubId),
-        name: repo,
-        owner,
-        fullName: `${owner}/${repo}`,
-        url: `https://github.com/${owner}/${repo}`,
-        userId: session.user.id,
-      },
-    });
-  }
-
-  // TODO:
-  // Increment user's connected repo count
-  await incrementRepositoryCount(session.user.id);
-
-  /**
-   * Trigger repository indexing asynchronously.
-   *
-   * First principles:
-   * - Indexing is slow (API calls, embeddings, vector DB writes)
-   * - Users should not wait for it
-   * - Failures should not block repo connection
-   *
-   * This is "fire-and-forget" via Inngest.
-   */
   try {
-    await inngest.send({
-      name: "repository.connected",
-      data: {
-        owner,
-        repo,
-        userId: session.user.id,
-      },
-    });
-  } catch (error) {
-    // Indexing failure should not break core functionality
-    console.error(
-      "Failed to trigger repository indexing: ",
-      error
-    );
-  }
+    // Opt into dynamic rendering
+    await connection();
 
-  // Return webhook metadata to caller
-  return webhook;
+    // Authenticate user
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      console.error(`❌ [connectRepository] No session found`);
+      throw new Error("Unauthorised");
+    }
+    console.log(`✅ [connectRepository] Session found for user ${session.user.id}`);
+
+    // Rate limiting should be enforced here:
+    console.log(`🔍 [connectRepository] Checking if user can connect repository`);
+    const canConnect = await canConnectRepository(session.user.id);
+
+    if (!canConnect) {
+      console.warn(`⚠️ [connectRepository] User ${session.user.id} has reached repository limit`);
+      throw new Error("You have reached the maximum number of connected repositories. Please upgrade your subscription to connect more repositories.");
+    }
+    console.log(`✅ [connectRepository] User can connect repository`);
+
+    // Create webhook so GitHub can notify us about PRs/events
+    console.log(`🔗 [connectRepository] Creating webhook for ${owner}/${repo}`);
+    const webhook = await createWebHook(owner, repo);
+    console.log(`✅ [connectRepository] Webhook created for ${owner}/${repo}`, { webhookId: webhook?.id });
+
+    // Only persist repo if webhook creation succeeded
+    if (webhook) {
+      console.log(`💾 [connectRepository] Saving repository to database`);
+      await prisma.repository.create({
+        data: {
+          // GitHub IDs must be stored as BigInt to preserve precision
+          githubId: BigInt(githubId),
+          name: repo,
+          owner,
+          fullName: `${owner}/${repo}`,
+          url: `https://github.com/${owner}/${repo}`,
+          userId: session.user.id,
+        },
+      });
+      console.log(`✅ [connectRepository] Repository saved to database`);
+    }
+
+    // Increment user's connected repo count
+    console.log(`📊 [connectRepository] Incrementing repository count`);
+    await incrementRepositoryCount(session.user.id);
+    console.log(`✅ [connectRepository] Repository count incremented`);
+
+    // Trigger repository indexing asynchronously
+    console.log(`📤 [connectRepository] Sending Inngest event for indexing`);
+    try {
+      await inngest.send({
+        name: "repository.connected",
+        data: {
+          owner,
+          repo,
+          userId: session.user.id,
+        },
+      });
+      console.log(`✅ [connectRepository] Inngest event sent successfully`);
+    } catch (error) {
+      // Indexing failure should not break core functionality
+      console.error(`⚠️ [connectRepository] Failed to trigger repository indexing`, {
+        owner, repo, userId: session.user.id,
+        error: error instanceof Error ? error.message : error
+      });
+    }
+
+    console.log(`🎉 [connectRepository] Completed for ${owner}/${repo}`);
+    return webhook;
+  } catch (error) {
+    console.error(`❌ [connectRepository] Failed to connect repository`, {
+      owner, repo, githubId,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    throw error;
+  }
 };

@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { reviewPullRequest } from "@/module/ai/actions";
 import { verifyGitHubWebhook, validateWebhookEvent } from "@/lib/webhook-security";
 
@@ -98,17 +99,20 @@ export async function POST(req: NextRequest) {
                 });
                 console.log(`🔄 Triggering review for ${repo} #${prNumber} (action: ${action})`);
 
-                // Fire and forget - don't block webhook response
-                reviewPullRequest(owner, repoName, prNumber)
-                    .then((result) => {
-                        console.log(`✅ Review queued successfully for ${repo} #${prNumber}`, result);
-                    })
-                    .catch((error) => {
-                        console.error(`❌ Review failed for ${repo} #${prNumber}:`, {
-                            message: error.message,
-                            stack: error.stack
-                        });
-                    });
+                // Use waitUntil to keep the function alive after returning response
+                // This prevents Vercel from killing the serverless function before async work completes
+                waitUntil(
+                    reviewPullRequest(owner, repoName, prNumber)
+                        .then((result) => {
+                            console.log(`✅ Review queued successfully for ${repo} #${prNumber}`, result);
+                        })
+                        .catch((error) => {
+                            console.error(`❌ Review failed for ${repo} #${prNumber}:`, {
+                                message: error.message,
+                                stack: error.stack
+                            });
+                        })
+                );
             } else {
                 console.log(`ℹ️  Ignoring PR action: ${action} for ${repo} #${prNumber} (only 'opened' and 'synchronize' trigger reviews)`);
             }
