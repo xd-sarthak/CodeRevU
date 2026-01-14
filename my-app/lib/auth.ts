@@ -27,6 +27,17 @@ export const auth = betterAuth({
         polar({
             client: PolarClient,
             createCustomerOnSignUp: true,
+            // Debug logging for Polar customer creation
+            getCustomerCreateParams: async ({ user }) => {
+                console.log("[Polar Debug] Creating customer with user data:", {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    hasEmail: !!user.email,
+                    hasName: !!user.name
+                });
+                return {};
+            },
             use: [
                 checkout({
                     products: [
